@@ -114,7 +114,7 @@ class ImageRecognition(object):
 
 if __name__ == "__main__":
         cfg = load_config()
-        imgRec=ImageRecognition(cfg)
+        imgRec=ImageRecognition()
         #imgRec.set_image_path("brocolli.jpg")
         #imgRec.read_image('brocolli.jpg')
         img_path = sys.argv[1]
