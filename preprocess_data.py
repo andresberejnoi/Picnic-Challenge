@@ -1,5 +1,6 @@
 import pandas as pd
 import os
+import shutil      #to copy files 
 
 def get_train_files_labels(filename):
     """
@@ -58,12 +59,38 @@ def create_dirs(dir_list, root='.'):
 
 def rearrange_files(dest,source,filenames):
     
+    for name in filenames:
+        source_file = os.path.join(source,name)
+        shutil.copy(source_file,dest)
+
+def make_new_dataset(filename):
+    new_dataset_folder = "train_dataset_arranged"
+    try:
+        os.mkdir(new_dataset_folder)
+    except FileExistsError:
+        pass
     
+    #---Get the categories in the dataset
+    categories_dic = separate_object_classes(filename)
+    
+    #---Create folders for each category
+    create_dirs(categories_dic.keys(),new_dataset_folder)
+    
+    #---Copy file into their respective category folders
+    root_source      = os.path.join("The Picnic Hackathon 2019","train")
+    #root_destination = new_dataset_folder 
+    for cat in categories_dic:
+        print('*'*80)
+        print("Processing Images for category: {}".format(cat))
+        destination = os.path.join(new_dataset_folder,cat)
+        files = categories_dic[cat]
+        rearrange_files(destination,root_source,files)
     
 
-def main():
-    #read_train_data('test')
-    pass
+def main(filename):
+    make_new_dataset(filename)
+    
 if __name__ == '__main__':
-    name = "The Picnic Hackathon 2019/train.tsv"
-    main()
+    #name = "The Picnic Hackathon 2019/train.tsv"
+    import sys
+    main(sys.argv[1])
