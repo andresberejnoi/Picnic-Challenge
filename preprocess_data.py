@@ -1,4 +1,5 @@
 import pandas as pd
+import os
 
 def get_train_files_labels(filename):
     """
@@ -32,10 +33,37 @@ def separate_labels(labels):
     
     return split_labels
 
+def separate_object_classes(filename):
+    #----Read train file
+    data = pd.read_csv(filename,sep='\t')
+    
+    #----Make dictioary of labels and populate it
+    categories_dic = {label:[] for label in data['label']}
+    
+    for category in categories_dic:
+        filtered = data.loc[data['label']==category]
+        files = filtered['file']
+        categories_dic[category] = files
+    
+    return categories_dic
+
+def create_new_dataset_folder(output_folder="New_Dataset"):
+    ''''''
+    
+def create_dirs(dir_list, root='.'):
+    for dirname in dir_list:
+        #---Create folder
+        filepath = os.path.join(root,folder)
+        os.mkdir(filepath)
+
+def rearrange_files(dest,source,filenames):
+    
+    
     
 
 def main():
     #read_train_data('test')
     pass
 if __name__ == '__main__':
+    name = "The Picnic Hackathon 2019/train.tsv"
     main()
