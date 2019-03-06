@@ -113,7 +113,7 @@ class ImageRecognition(object):
                 return labels_filtered,scores_filtered
 
 if __name__ == "__main__":
-        cfg = load_config()
+        #cfg = load_config()
         imgRec=ImageRecognition()
         #imgRec.set_image_path("brocolli.jpg")
         #imgRec.read_image('brocolli.jpg')
