@@ -54,7 +54,7 @@ def create_new_dataset_folder(output_folder="New_Dataset"):
 def create_dirs(dir_list, root='.'):
     for dirname in dir_list:
         #---Create folder
-        filepath = os.path.join(root,folder)
+        filepath = os.path.join(root,dirname)
         os.mkdir(filepath)
 
 def rearrange_files(dest,source,filenames):
