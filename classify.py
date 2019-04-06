@@ -1,6 +1,20 @@
 import tensorflow as tf
-import sys
+import tensorflow_hub as hub
 
+from tensorflow.keras import layers
+
+#----------------------Create session
+import tensorflow.keras.backend as K
+import PIL as pil
+import numpy as np
+
+
+class PicnicClassifer(object):
+    def __init__(self):
+        pass
+
+    def predict(self):
+        pass
 
 class ImageRecognition(object):
         FILTER_MODE=0
@@ -20,6 +34,18 @@ class ImageRecognition(object):
                 label_lines = [line.rstrip() for line in tf.gfile.GFile(self.retrained_labels)]
                 return label_lines
 
+        def load_graph(self,model_file):
+            '''Example taken from label_image.py from tensorflow examples repository'''
+            graph = tf.Graph()
+            graph_def = tf.GraphDef()
+
+            with open(model_file, "rb") as f:
+                graph_def.ParseFromString(f.read())
+            with graph.as_default():
+                tf.import_graph_def(graph_def)
+
+            return graph
+
         def set_filter_mode(self,mode):
                 '''
                 Changes the mode of the filter applied during the classification process
@@ -36,13 +62,40 @@ class ImageRecognition(object):
                         score = predictions[0][node_id]
                         print('%s (score = %.5f)' % (human_string, score))
 
-        def predict(self):
+        def predict_OLD(self):
                 # Unpersists graph from file
                 with tf.gfile.FastGFile(self.retrained_graph, 'rb') as f:
                         graph_def = tf.GraphDef()
                         graph_def.ParseFromString(f.read())
                         _ = tf.import_graph_def(graph_def, name='')
                 with tf.Session() as sess:
+                        # Feed the image_data as input to the graph and get first prediction
+                        softmax_tensor = sess.graph.get_tensor_by_name('final_result:0')
+
+                        predictions = sess.run(softmax_tensor, {'DecodeJpeg/contents:0': self.image_data})
+
+                        # Sort to show labels of first prediction in order of confidence
+                        top_k = predictions[0].argsort()[-len(predictions[0]):][::-1]
+                print(type(top_k),top_k)   #DEBUGGING LINE
+                label = self.label_lines[top_k[0]]
+                #certainty = predictions[0][top_k[0]]
+
+                return label
+
+        def predict(self):
+                # Unpersists graph from file
+                #'''
+                with open(self.retrained_graph, 'rb') as f:
+                        graph_def = tf.GraphDef()
+                        proto_b   = f.read()
+
+                        text_format.Merge(proto_b,graph_def)
+
+                        #graph_def.ParseFromString(f.read())
+                        _ = tf.import_graph_def(graph_def, name='')
+                #'''
+                #graph = self.load_graph(self.retrained_graph)
+                with tf.Session(graph=graph) as sess:
                         # Feed the image_data as input to the graph and get first prediction
                         softmax_tensor = sess.graph.get_tensor_by_name('final_result:0')
 
@@ -114,13 +167,16 @@ class ImageRecognition(object):
 
 if __name__ == "__main__":
         #cfg = load_config()
-        imgRec=ImageRecognition()
+        img_path    = sys.argv[1]
+        labels_path = sys.argv[2]
+        model_path  = sys.argv[3]
+        imgRec=ImageRecognition(labels_path,model_path)
         #imgRec.set_image_path("brocolli.jpg")
         #imgRec.read_image('brocolli.jpg')
         img_path = sys.argv[1]
         imgRec.read_image(img_path)
         #print(imgRec.predict())
-        labels,scores = imgRec.predict_multilabel()
+        labels,scores = imgRec.predict()
         added_scores = sum(scores)
         print("Total sum of scores is:",added_scores)
         print(list(zip(labels,scores)))
