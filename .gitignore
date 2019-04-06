@@ -1,0 +1,8 @@
+*.zip
+dummy_data/
+train_dataset_arranged/
+The\ Picnic\ Hackathon\ 2019/
+dataset/
+retrain_code/
+label_image.py
+output_model/
