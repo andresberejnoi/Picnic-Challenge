@@ -2,26 +2,16 @@ import tensorflow as tf
 import tensorflow_hub as hub
 
 from tensorflow.keras import layers
-import os
-import numpy as np
-import PIL as pil
-import numpy as np
 
 #----------------------Create session
 import tensorflow.keras.backend as K
-sess = K.get_session()
-init = tf.global_variables_initializer()
+import PIL as pil
+import os
+import pandas as pd
+import numpy as np
+import argparse
 
-#-------------------------------------------------------------------------------
-'''
-feature_extractor_url = "https://tfhub.dev/google/imagenet/mobilenet_v2_100_224/feature_vector/2" #@param {type:"string"}
 
-def feature_extractor(x):
-    feature_extractor_module = hub.Module(feature_extractor_url)
-    return feature_extractor_module(x)
-
-IMAGE_SIZE = hub.get_expected_image_size(hub.Module(feature_extractor_url))
-'''
 
 classifier_url = "https://tfhub.dev/google/imagenet/mobilenet_v2_100_224/classification/2" #@param {type:"string"}
 def classifier(x):
@@ -31,20 +21,72 @@ def classifier(x):
 IMAGE_SIZE = hub.get_expected_image_size(hub.Module(classifier_url))
 
 
-img_path  = "dummy_data/Fish/19.jpeg"
-img       = pil.Image.open(img_path)
-img       = img.resize(IMAGE_SIZE)
-img       = np.array(img) / 255.0
-print(img.shape)
-#model_path = os.path.join("saved_models","1554354743")
-model_path = b'./saved_models/1554396194'
+
+
+#===============================================================================
+#                  Prepare argument parsing and model testing
+#===============================================================================
+parser = argparse.ArgumentParser(description='Picnic Image Classifier (Runner)')
+parser.add_argument('-m', '--model_path', type=str, default=None)
+parser.add_argument('-d', '--dataset',type=str,default='dataset',help='Dataset root')
+parser.add_argument('-l', '--labels',type=str,default='labels.txt')
+args = parser.parse_args()
+if args.model_path is None:
+    with open('export_path.txt','rb') as f:
+        export_path = f.read()
+
+else:
+    export_path = args.model_path
+
+
+
+export_path = str(export_path,'UTF-8')
+print("****Model PATH to use: ", export_path)
+#===============================================================================
+
+
+
 #------------------Load Model
 # Load the saved keras model back.
-model = tf.contrib.saved_model.load_keras_model(model_path)
+model = tf.contrib.saved_model.load_keras_model(export_path)
 model.summary()
+
+#------------------Prepare data to read
+#data_root = "dataset"
+DATA_ROOT = os.path.join(".",args.dataset)
+test_root = os.path.join(DATA_ROOT, "test")
+
+testing_generator = tf.keras.preprocessing.image.ImageDataGenerator(rescale=1/255)
+testing_data      = testing_generator.flow_from_directory(directory=str(test_root),
+                                                           target_size=IMAGE_SIZE,
+                                                           class_mode=None,
+                                                           batch_size=1,
+                                                           shuffle=False,
+                                                           color_mode='rgb')
+
+#------------------Initialize variables
+sess = K.get_session()
+init = tf.global_variables_initializer()
+sess.run(init)
 
 
 #------------------Predict
-predictions = model.predict(img[np.newaxis, ...])
+testing_data.reset()               #reset generator
+predictions = model.predict_generator(testing_data,verbose=1)
 
-print(np.argmax(predictions[0]))
+
+#------------------Process results and save
+predicted_class_indices = np.argmax(predictions,axis=1)
+
+print("Predictions shape:", predictions.shape,'\n')
+print("Most likely classes:\n",predicted_class_indices)
+
+labels = (training_data.class_indices)
+labels = dict((v,k) for k,v in labels.items())
+predictions = [labels[k] for k in predicted_class_indices]
+
+
+filenames = testing_data.filenames
+results   = pd.DataFrame({"File":filenames,
+                          "Label":predictions})
+results.to_csv("results.tsv",index=False,sep='\t')
