@@ -6,3 +6,4 @@ dataset/
 retrain_code/
 label_image.py
 output_model/
+__pycache__/
