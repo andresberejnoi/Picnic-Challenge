@@ -20,6 +20,7 @@ parser = argparse.ArgumentParser(description='Picnic Image Classifier')
 #parser.add_argument('-broker', type=str, help="Name of the broker or counterparty to connect to. tier1 for Tier1FX and pig for FXPig")
 parser.add_argument('-d', '--dataset',type=str,default='dataset',help='Dataset root')
 parser.add_argument('-p', '--predict', action='store_true')
+parser.add_argument('-e','--epochs', type=int, default=1)
 args = parser.parse_args()
 
 
@@ -113,7 +114,7 @@ class CollectBatchStats(tf.keras.callbacks.Callback):
 #------------------Start training
 steps_per_epoch = training_data.samples//training_data.batch_size
 batch_stats = CollectBatchStats()
-model.fit((item for item in training_data), epochs=1,
+model.fit((item for item in training_data), epochs=args.epochs,
                     steps_per_epoch=steps_per_epoch,
                     callbacks = [batch_stats])
 
