@@ -21,6 +21,8 @@ parser = argparse.ArgumentParser(description='Picnic Image Classifier')
 parser.add_argument('-d', '--dataset',type=str,default='dataset',help='Dataset root')
 parser.add_argument('-p', '--predict', action='store_true')
 parser.add_argument('-e','--epochs', type=int, default=1)
+parser.add_argument('-b','--bach_size',type=int,default=50)
+parser.add_argument('--model_url',type=str,default="https://tfhub.dev/google/imagenet/mobilenet_v2_100_224/classification/2")
 args = parser.parse_args()
 
 
@@ -40,7 +42,8 @@ def feature_extractor(x):
 
 IMAGE_SIZE = hub.get_expected_image_size(hub.Module(feature_extractor_url))
 '''
-classifier_url = "https://tfhub.dev/google/imagenet/mobilenet_v2_100_224/classification/2" #@param {type:"string"}
+#classifier_url = "https://tfhub.dev/google/imagenet/mobilenet_v2_100_224/classification/2" #@param {type:"string"}
+classifier_url = args.model_url
 def classifier(x):
     classifier_module = hub.Module(classifier_url)
     return classifier_module(x)
@@ -49,7 +52,8 @@ IMAGE_SIZE = hub.get_expected_image_size(hub.Module(classifier_url))
 
 
 #-------------------------------------------------------------------------------
-DATA_ROOT = os.path.join(".",args.dataset)
+BATCH_SIZE = args.batch_size
+DATA_ROOT = args.dataset
 #ata_root = "dataset"
 train_root = os.path.join(DATA_ROOT,'train')
 
@@ -57,7 +61,7 @@ training_generator = tf.keras.preprocessing.image.ImageDataGenerator(rescale=1/2
 training_data = training_generator.flow_from_directory(directory=str(train_root),
                                                        color_mode='rgb',
                                                        target_size=IMAGE_SIZE,
-                                                       batch_size=100,
+                                                       batch_size=BATCH_SIZE,
                                                        class_mode='categorical',
                                                        shuffle=True)
 
@@ -122,7 +126,7 @@ model.fit((item for item in training_data), epochs=args.epochs,
 
 
 #-----------------Save model
-export_path = tf.contrib.saved_model.save_keras_model(model, "./saved_models")
+export_path = tf.contrib.saved_model.save_keras_model(model, "saved_models")
 
 print("*"*20)
 print("EXPORT PATH: ",export_path)
@@ -192,6 +196,6 @@ if args.predict:
 
     filenames = testing_data.filenames
     filenames = remove_path(filenames)
-    results   = pd.DataFrame({"File":filenames,
-                              "Label":predictions})
+    results   = pd.DataFrame({"file":filenames,
+                              "label":predictions})
     results.to_csv("results.tsv",index=False,sep='\t')
