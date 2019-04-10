@@ -21,7 +21,7 @@ parser = argparse.ArgumentParser(description='Picnic Image Classifier')
 parser.add_argument('-d', '--dataset',type=str,default='dataset',help='Dataset root')
 parser.add_argument('-p', '--predict', action='store_true')
 parser.add_argument('-e','--epochs', type=int, default=1)
-parser.add_argument('-b','--bach_size',type=int,default=50)
+parser.add_argument('-b','--batch_size',type=int,default=50)
 parser.add_argument('--model_url',type=str,default="https://tfhub.dev/google/imagenet/mobilenet_v2_100_224/classification/2")
 args = parser.parse_args()
 
