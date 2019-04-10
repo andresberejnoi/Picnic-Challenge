@@ -8,3 +8,4 @@ retrain_code/
 label_image.py
 output_model/
 __pycache__/
+submissions/
