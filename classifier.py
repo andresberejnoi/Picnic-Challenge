@@ -137,8 +137,9 @@ class PicnicClassifier(object):
         results.to_csv(output_file,index=False,sep='\t')
 
 def remove_path(filenames):
-    only_files = [filepath.split('/')[-1] for filepath in filenames]
+    only_files = [os.path.split(filepath)[1] for filepath in filenames]
     return only_files
+
 class ImageRecognition(object):
         FILTER_MODE=0
         def __init__(self, path_to_labels, path_to_model):
